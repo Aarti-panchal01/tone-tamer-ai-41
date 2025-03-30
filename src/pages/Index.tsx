@@ -8,7 +8,8 @@ const Index: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1">
-        <style jsx global>{`
+        <style>
+          {`
           .negative-highlight {
             background-color: rgba(239, 68, 68, 0.2);
             border-bottom: 2px solid rgb(239, 68, 68);
@@ -28,7 +29,8 @@ const Index: React.FC = () => {
             padding: 2px 4px;
             border-radius: 4px;
           }
-        `}</style>
+          `}
+        </style>
         <Dashboard />
       </main>
       <footer className="py-6 border-t">
