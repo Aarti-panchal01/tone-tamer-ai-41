@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Send, RefreshCw, Copy, Check, Sparkles } from "lucide-react";
+import { Edit, Send, RefreshCw, Copy, Check, Sparkles, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const mockAnalyzeText = (text: string) => {
@@ -13,7 +13,7 @@ const mockAnalyzeText = (text: string) => {
   const lowerCaseText = text.toLowerCase();
   
   // Check for harmful content
-  const harmfulKeywords = ['kill myself', 'suicide', 'harm myself', 'end my life', 'want to die'];
+  const harmfulKeywords = ['kill', 'suicide', 'harm', 'end my life', 'want to die'];
   const hasHarmfulContent = harmfulKeywords.some(phrase => lowerCaseText.includes(phrase));
   
   if (hasHarmfulContent) {
@@ -38,6 +38,7 @@ const mockAnalyzeText = (text: string) => {
     };
   }
   
+  // Check for other tones if not harmful
   const negativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'];
   const hasNegativeKeywords = negativeKeywords.some(word => lowerCaseText.includes(word));
   
@@ -141,7 +142,7 @@ const mockGenerateAlternative = (text: string, tone: string) => {
   
   // Special handling for harmful content
   const lowerCaseText = text.toLowerCase();
-  const harmfulKeywords = ['kill myself', 'suicide', 'harm myself', 'end my life', 'want to die'];
+  const harmfulKeywords = ['kill', 'suicide', 'harm', 'end my life', 'want to die'];
   const hasHarmfulContent = harmfulKeywords.some(phrase => lowerCaseText.includes(phrase));
   
   if (hasHarmfulContent) {
@@ -193,17 +194,23 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   const [alternatives, setAlternatives] = useState<string[]>([]);
   const [selectedAlternative, setSelectedAlternative] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [hasWarning, setHasWarning] = useState(false);
   
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
-    if (e.target.value.length > 20) {
-      analyzeText(e.target.value);
-    } else {
+    setHasWarning(false);
+    
+    if (analysis !== null) {
       setAnalysis(null);
     }
   };
   
   const analyzeText = (text: string) => {
+    if (!text.trim()) {
+      toast.error("Please enter some text to analyze");
+      return;
+    }
+    
     setIsAnalyzing(true);
     
     setTimeout(() => {
@@ -212,8 +219,14 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
       setIsAnalyzing(false);
       
       if (results && results.requiresAttention) {
+        setHasWarning(true);
         toast.warning("This content may require attention", {
-          description: "Please be mindful of potentially harmful content."
+          description: "Please be mindful of potentially harmful content.",
+          duration: 5000,
+          action: {
+            label: "Get Support",
+            onClick: () => window.open("https://www.crisistextline.org/", "_blank"),
+          }
         });
       }
     }, 800);
@@ -303,22 +316,30 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
         </Badge>
       </div>
       
-      <Card className="mb-4">
+      <Card className={`mb-4 ${hasWarning ? 'border-red-400' : ''}`}>
         <div className="p-4">
           <Textarea
             placeholder={`Write your ${currentPlatform.name} post here...`}
-            className="min-h-[120px] mb-2 text-base resize-none bg-[#f7f7ff]"
+            className={`min-h-[120px] mb-2 text-base resize-none ${hasWarning ? 'bg-red-50 border-red-300' : 'bg-[#f7f7ff]'}`}
             value={inputText}
             onChange={handleInputChange}
             maxLength={currentPlatform.maxLength}
           />
           
+          {hasWarning && (
+            <div className="mb-3 p-2 bg-red-50 border border-red-300 rounded flex items-center text-red-700">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              <span className="text-sm">This content may contain harmful language. Consider rephrasing.</span>
+            </div>
+          )}
+          
           <div className="flex justify-end space-x-2 mt-3">
             <Button 
-              variant="outline" 
+              variant={hasWarning ? "destructive" : "default"}
               size="sm"
               onClick={() => analyzeText(inputText)}
-              disabled={inputText.length < 10 || isAnalyzing}
+              disabled={inputText.length < 3 || isAnalyzing}
+              className="shadow-sm"
             >
               {isAnalyzing ? (
                 <>
@@ -351,7 +372,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
           </div>
           
           {analysis.emojiMeter && (
-            <div className="bg-card p-3 rounded-md border flex items-center justify-center text-center">
+            <div className={`p-3 rounded-md border flex items-center justify-center text-center ${analysis.overallTone === "harmful" ? "bg-red-50 border-red-300 text-red-700" : "bg-card"}`}>
               <div className="text-lg">{analysis.emojiMeter}</div>
             </div>
           )}
