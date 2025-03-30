@@ -18,7 +18,7 @@ const Header: React.FC = () => {
             🎭
           </span>
           <Link to="/" className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity">
-            <span className="text-primary">Tone</span>Tamer
+            <span className="text-primary">Ace</span>Infinity
             <span className="ml-1 text-xs font-normal bg-gradient-to-r from-pink-500 to-purple-500 text-transparent bg-clip-text">by Aarti</span>
           </Link>
         </div>
