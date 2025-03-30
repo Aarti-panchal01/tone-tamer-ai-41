@@ -1,4 +1,3 @@
-
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -38,6 +37,9 @@ const mockAnalyzeText = (text: string) => {
     };
   }
   
+  const financialDistressKeywords = ['no money', 'poor', 'broke', 'can\'t afford', 'debt', 'bankrupt', 'poverty'];
+  const hasFinancialDistress = financialDistressKeywords.some(phrase => lowerCaseText.includes(phrase));
+  
   const negativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'];
   const hasNegativeKeywords = negativeKeywords.some(word => lowerCaseText.includes(word));
   
@@ -48,7 +50,11 @@ const mockAnalyzeText = (text: string) => {
   let confidence = 70;
   let emojiMeter = "🙂 Neutral tone detected";
   
-  if (hasNegativeKeywords || (hasUpperCase && hasExclamations)) {
+  if (hasFinancialDistress) {
+    overallTone = "negative";
+    confidence = 85;
+    emojiMeter = "😟 Financial distress detected";
+  } else if (hasNegativeKeywords || (hasUpperCase && hasExclamations)) {
     overallTone = "negative";
     confidence = 85;
     emojiMeter = "😡 Negative tone detected";
@@ -68,11 +74,24 @@ const mockAnalyzeText = (text: string) => {
     requiresAttention: false
   };
 
-  const negativeWords = ["hate", "terrible", "awful", "worst", "stupid", "ridiculous", "rude"];
+  const negativeWords = ["hate", "terrible", "awful", "worst", "stupid", "ridiculous", "rude", "no money", "poor", "broke", "debt", "bankrupt", "poverty"];
   const sarcasticWords = ["sure", "right", "yeah", "whatever", "obviously"];
   const passiveWords = ["kind of", "sort of", "maybe", "just", "actually"];
 
   const words = text.split(/\s+/);
+  
+  if (hasFinancialDistress) {
+    for (const phrase of financialDistressKeywords) {
+      if (lowerCaseText.includes(phrase)) {
+        const index = lowerCaseText.indexOf(phrase);
+        mockResults.triggers.push({
+          word: text.substring(index, index + phrase.length),
+          index: index,
+          type: "negative"
+        });
+      }
+    }
+  }
   
   for (let i = 0; i < words.length; i++) {
     const word = words[i].toLowerCase().replace(/[.,!?;]/g, '');
@@ -98,7 +117,11 @@ const mockAnalyzeText = (text: string) => {
     }
   }
 
-  if (mockResults.overallTone === "negative") {
+  if (hasFinancialDistress) {
+    mockResults.suggestions.push("Your message indicates financial concerns. Consider a more optimistic framing if appropriate.");
+    mockResults.suggestions.push("Financial situations are temporary. Consider a tone that focuses on solutions or support.");
+    mockResults.suggestions.push("If sharing financial struggles, consider adding context about your plans or needs.");
+  } else if (mockResults.overallTone === "negative") {
     mockResults.suggestions.push("Try using more constructive language to convey your feelings.");
     mockResults.suggestions.push("Consider replacing negative words with more balanced alternatives.");
     mockResults.suggestions.push("Your message might come across as harsh. Consider a more neutral approach.");
@@ -147,115 +170,150 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     return "I'm having a difficult time and would appreciate some support or someone to talk to.";
   }
   
-  // Define transformation templates for each tone
-  const toneTransformations: Record<string, (input: string) => string> = {
-    positive: (input) => {
+  const financialDistressKeywords = ['no money', 'poor', 'broke', 'can\'t afford', 'debt', 'bankrupt', 'poverty'];
+  const hasFinancialDistress = financialDistressKeywords.some(phrase => lowerCaseText.includes(phrase));
+  
+  const extractCircumstances = () => {
+    if (hasFinancialDistress) {
+      return "financial situation";
+    }
+    
+    const nouns = text.match(/\b(?:the\s+)?([a-z]+(?:\s+[a-z]+)?)\b/gi) || [];
+    return nouns.length > 0 ? nouns[Math.floor(nouns.length / 2)] : "situation";
+  };
+  
+  const circumstance = extractCircumstances();
+  
+  const toneTransformations: Record<string, (input: string, circumstances: string) => string> = {
+    positive: (input, circumstances) => {
+      if (hasFinancialDistress) {
+        const phrases = [
+          `I'm working through some temporary financial challenges right now, but I'm staying positive and focusing on solutions! 💪✨`,
+          `Currently navigating a tight financial spot, but I'm grateful for what I do have and excited about future opportunities! 🌱💖`,
+          `Embracing this moment of financial growth - every challenge brings new lessons and I'm ready for them! 🌟`,
+          `This financial chapter is just temporary! I'm focused on the abundance of possibilities ahead and staying optimistic! 😊✨`
+        ];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+      }
+      
       const phrases = [
-        `I'm thrilled about ${input.replace(/\b(hate|dislike|awful|terrible)\b/g, 'love')}! Every step forward is a victory! 😊✨`,
-        `What a fantastic thing to share about ${input.replace(/\b(bad|negative|poor)\b/g, 'great')}! I'm genuinely excited about this! 🌟`,
-        `I'm absolutely delighted with ${input.toLowerCase().includes('not') ? input.replace(/\bnot\b/g, '') : input}! This is wonderful news and I'm feeling very optimistic! 💖`,
-        `So happy about ${input.replace(/\b(hate|dislike|awful|terrible)\b/g, 'appreciate')}! This is exactly the kind of positive outcome I was hoping for! 🎉`
+        `I'm thrilled about ${circumstances}! Every step forward is a victory! 😊✨`,
+        `What a fantastic ${circumstances}! I'm genuinely excited about this! 🌟`,
+        `I'm absolutely delighted with ${circumstances}! This is wonderful news and I'm feeling very optimistic! 💖`,
+        `So happy about ${circumstances}! This is exactly the kind of positive outcome I was hoping for! 🎉`
       ];
       return phrases[Math.floor(Math.random() * phrases.length)];
     },
     
-    negative: (input) => {
+    professional: (input, circumstances) => {
+      if (hasFinancialDistress) {
+        const phrases = [
+          `I'm currently seeking opportunities to improve my financial situation. I welcome any professional advice or connections that might be beneficial.`,
+          `I'm navigating some financial constraints at present and exploring sustainable solutions. Any professional guidance would be appreciated.`,
+          `I'm in the process of restructuring my financial approach and would value insights from those with relevant expertise in this area.`,
+          `I'm currently reassessing my financial strategy and would appreciate any professional resources or opportunities that might assist in this transition.`
+        ];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+      }
+      
       const phrases = [
-        `This is extremely disappointing: ${input}. I expected much better results.`,
-        `I'm completely unsatisfied with ${input}. The quality is far below acceptable standards.`,
-        `This is not at all what I wanted: ${input}. I'm very unhappy with how things turned out.`,
-        `These results are terrible. ${input} has been poorly executed.`
+        `I would like to address the matter of ${circumstances} with a structured approach that aligns with our established objectives.`,
+        `After careful analysis of ${circumstances}, I've developed a solution that effectively addresses the key requirements.`,
+        `Regarding ${circumstances}, I've implemented a methodical approach that adheres to industry best practices.`,
+        `I'm pleased to provide an update on ${circumstances}, which has been handled according to our standard protocols.`
       ];
       return phrases[Math.floor(Math.random() * phrases.length)];
     },
     
-    neutral: (input) => {
+    friendly: (input, circumstances) => {
+      if (hasFinancialDistress) {
+        const phrases = [
+          `Hey friends! Going through a bit of a tight spot with money right now - anyone have tips for fun free activities we could do together? 💖`,
+          `Budget mode: activated! 😅 Who else is saving right now? Let's share some money-saving hacks and support each other! ✨`,
+          `Being budget-conscious these days, but still want to hang out! Anyone up for a potluck or movie night at my place this weekend? 🍿💕`,
+          `Wallet's feeling light lately but my spirit isn't! Who's up for a walk in the park and good conversation? Sometimes the best things in life really are free! 🌳💫`
+        ];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+      }
+      
       const phrases = [
-        `Regarding ${input}: the process has been completed as requested. The results are now available for review.`,
-        `This update contains: ${input}. Documentation is available for reference.`,
-        `${input} has been implemented according to specifications. Testing can now begin.`,
-        `All requested changes have been applied to ${input}. Please verify the outcomes at your convenience.`
+        `Hey there! Just wanted to chat about ${circumstances} - it's been on my mind lately and I'd love your thoughts! 💕`,
+        `Hi friend! Have you heard about ${circumstances}? Let me know what you think - I'm all ears! 🤗`,
+        `Hello lovely! ${circumstances.charAt(0).toUpperCase() + circumstances.slice(1)} has been keeping me busy lately - would love to catch up and tell you all about it! ✨`,
+        `Hey you! What's your take on ${circumstances}? I've been thinking about it and would love your perspective! 💭`
       ];
       return phrases[Math.floor(Math.random() * phrases.length)];
     },
     
-    professional: (input) => {
+    neutral: (input, circumstances) => {
+      if (hasFinancialDistress) {
+        const phrases = [
+          `Currently managing financial constraints and exploring available options.`,
+          `Navigating limited financial resources at present. Considering viable alternatives.`,
+          `Financial resources are currently restricted. Evaluating next steps accordingly.`,
+          `Experiencing budgetary limitations. Assessing appropriate courses of action.`
+        ];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+      }
+      
       const phrases = [
-        `We're pleased to inform you that regarding "${input}", the requested modifications have been successfully implemented per specifications.`,
-        `Upon thorough analysis of "${input}", we have developed a solution that effectively addresses the key objectives.`,
-        `I would like to confirm that we have completed the integration of "${input}" as discussed, which should enhance overall functionality.`,
-        `After careful consideration of your feedback on "${input}", we've implemented changes that align with industry best practices.`
+        `Regarding ${circumstances}: the process has been completed as specified.`,
+        `This update concerns ${circumstances}. Documentation is available if needed.`,
+        `${circumstances.charAt(0).toUpperCase() + circumstances.slice(1)} has been addressed according to guidelines.`,
+        `Information about ${circumstances} has been processed. Further details are available upon request.`
       ];
       return phrases[Math.floor(Math.random() * phrases.length)];
     },
     
-    friendly: (input) => {
+    bold: (input, circumstances) => {
+      if (hasFinancialDistress) {
+        const phrases = [
+          `ATTENTION: I'm ACTIVELY SEEKING new INCOME OPPORTUNITIES! Let's connect if you know of any AMAZING positions that match my EXCEPTIONAL skills!`,
+          `BREAKING: I'm on a RADICAL financial reset journey and CRUSHING my budget goals! INCREDIBLE money-saving tips welcome!`,
+          `ANNOUNCING my REVOLUTIONARY "zero spending" challenge! Follow along as I TRANSFORM my financial future in just 30 DAYS!`,
+          `CALLING ALL CONNECTIONS! I'm LAUNCHING my freelance career and READY to deliver OUTSTANDING results at COMPETITIVE rates! DM for details!`
+        ];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+      }
+      
       const phrases = [
-        `Hey there! Just wanted to let you know about "${input}" - it's looking awesome! Can't wait to hear what you think! 💖`,
-        `Hi friend! Amazing news about "${input}" - we've made those changes you were hoping for! Hope you love them as much as we do! 🥰`,
-        `Hello lovely! Just popping in to share that "${input}" is ready to go! So excited for you to see it! ✨`,
-        `Hey you! Guess what? "${input}" is all done! Let me know how you like it! 🤗`
+        `This GROUNDBREAKING development with ${circumstances} is going to REVOLUTIONIZE how we approach everything! Don't miss this INCREDIBLE opportunity!`,
+        `ATTENTION: I've just discovered a GAME-CHANGING approach to ${circumstances} that will TRANSFORM your entire perspective! Act NOW!`,
+        `I've COMPLETELY REIMAGINED ${circumstances} and the results are SPECTACULAR! This will DRAMATICALLY improve everything!`,
+        `${circumstances.toUpperCase()} is the BIGGEST and MOST IMPORTANT topic we need to discuss! You WON'T BELIEVE the AMAZING insights I've gained!`
       ];
       return phrases[Math.floor(Math.random() * phrases.length)];
     },
     
-    bold: (input) => {
+    genz: (input, circumstances) => {
+      if (hasFinancialDistress) {
+        const phrases = [
+          `Bestie my bank account is in its flop era fr 😭 But we still vibing and that's on period! 💅`,
+          `No cap, I'm broke as a joke rn but still slaying the day! It's giving resourceful queen energy! 👑`,
+          `My wallet said "I'm literally empty" and I felt that 💀 Still gonna make this my main character era tho! ✨`,
+          `The struggle is real but I'm still that girl! 💁‍♀️ Budget life check! Who else is surviving on vibes and instant noodles? 🍜`
+        ];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+      }
+      
       const phrases = [
-        `This GROUNDBREAKING update regarding "${input}" is going to REVOLUTIONIZE how you interact with our platform! Don't miss this INCREDIBLE opportunity!`,
-        `ATTENTION: We've just unleashed a GAME-CHANGING feature for "${input}" that will TRANSFORM your entire experience! Act NOW!`,
-        `We've COMPLETELY REIMAGINED "${input}" and the results are SPECTACULAR! This will DRAMATICALLY improve your workflow!`,
-        `"${input}" is the BIGGEST and MOST IMPORTANT upgrade we've EVER released! You WON'T BELIEVE the AMAZING results!`
-      ];
-      return phrases[Math.floor(Math.random() * phrases.length)];
-    },
-    
-    casual: (input) => {
-      const phrases = [
-        `So yeah, we just rolled out that thing about "${input}". Pretty cool if you ask me. Check it out whenever.`,
-        `Just FYI, that update on "${input}" is done. Turned out pretty decent. Let me know what you think when you get a chance.`,
-        `Hey, so that stuff you asked for about "${input}" is ready now. No rush, but it's there when you need it.`,
-        `That update you mentioned on "${input}"? All done. Nothing too fancy, but it does the job. Let me know if it works for you.`
-      ];
-      return phrases[Math.floor(Math.random() * phrases.length)];
-    },
-    
-    genz: (input) => {
-      const phrases = [
-        `FR FR "${input}" is so bussin, no cap! It's giving main character energy and that's on periodt! 💅✨`,
-        `Bestie, this "${input}" feature is LITERALLY eating and leaving no crumbs! It's so fire you'll be SHOOK! 😭🤌`,
-        `The way "${input}" ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥`,
-        `I can't even with how slay "${input}" is! It's lowkey POPing off. Not me being obsessed with it! 💁‍♀️✌️`
-      ];
-      return phrases[Math.floor(Math.random() * phrases.length)];
-    },
-    
-    inspirational: (input) => {
-      const phrases = [
-        `Every step forward with "${input}" is a testament to your vision. This represents not just code, but possibility—embrace it! 🚀`,
-        `Behind "${input}" lies a journey of growth. Let this improvement be the wings that elevate your project to new heights! ✨`,
-        `The path to excellence with "${input}" is paved with continuous improvement. This is not the destination, but another beautiful step in your journey! 🌟`,
-        `Believe in the power of progress with "${input}", for in these changes lies the seed of transformation. Your vision is becoming reality, one step at a time! 🌱`
+        `FR FR ${circumstances} is so bussin, no cap! It's giving main character energy and that's on periodt! 💅✨`,
+        `Bestie, this ${circumstances} moment is LITERALLY eating and leaving no crumbs! It's so fire you'll be SHOOK! 😭🤌`,
+        `The way ${circumstances} ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥`,
+        `I can't even with how slay ${circumstances} is! It's lowkey POPing off. Not me being obsessed with it! 💁‍♀️✌️`
       ];
       return phrases[Math.floor(Math.random() * phrases.length)];
     }
   };
   
-  const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous', 'poor'].some(
-    word => lowerCaseText.includes(word)
-  );
-  
-  // If the tone doesn't exist in our transformations, use neutral
   if (!toneTransformations[tone]) {
-    return toneTransformations.neutral(text);
+    return toneTransformations.neutral(text, circumstance);
   }
   
-  // Generate a transformed version of the input text based on the selected tone
-  const transformedText = toneTransformations[tone](text);
+  const transformedText = toneTransformations[tone](text, circumstance);
   
-  // Add timestamp to seed to ensure different results on regenerate clicks
   const seed = Date.now() % 10000;
   
-  // Return the transformed text with slight randomization
   return transformedText + (seed % 2 === 0 ? '' : ' ');
 };
 
@@ -319,7 +377,6 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
     setAlternatives([]);
     
     setTimeout(() => {
-      // Generate a unique alternative based on the target tone
       const alternative = mockGenerateAlternative(inputText, targetTone);
       
       setAlternatives([alternative]);
@@ -329,20 +386,17 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
     }, 1200);
   };
   
-  // Force regenerate when the user clicks the regenerate button
   const forceRegenerate = () => {
     setRegenerateCounter(prev => prev + 1);
     generateAlternative();
   };
   
-  // Important: Regenerate alternative text whenever the target tone changes or input text changes
   useEffect(() => {
     if (inputText.trim() && analysis !== null) {
       generateAlternative();
     }
   }, [targetTone, regenerateCounter]);
   
-  // Generate when analysis is complete
   useEffect(() => {
     if (analysis !== null && inputText.trim()) {
       generateAlternative();
@@ -378,7 +432,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   const getToneEmoji = (tone: string) => {
     switch (tone) {
       case "positive": return "😊";
-      case "negative": return "😡";
+      case "negative": return "😟";
       case "neutral": return "🙂";
       case "harmful": return "⚠️";
       default: return "🤔";
