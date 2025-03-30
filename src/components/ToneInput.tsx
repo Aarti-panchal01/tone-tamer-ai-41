@@ -18,7 +18,8 @@ const mockAnalyzeText = (text: string) => {
     confidence: Math.floor(Math.random() * 40 + 60), // Random score between 60-100
     triggers: [],
     suggestions: [],
-    highlightedText: text
+    highlightedText: text,
+    emojiMeter: ""
   };
 
   // Simple mock to find potential trigger words
@@ -56,12 +57,21 @@ const mockAnalyzeText = (text: string) => {
   if (mockResults.overallTone === "negative") {
     mockResults.suggestions.push("Try using more positive language to convey your message.");
     mockResults.suggestions.push("Consider replacing negative words with constructive alternatives.");
+    mockResults.emojiMeter = "😡 Negative tone detected";
   } else if (mockResults.overallTone === "sarcastic") {
     mockResults.suggestions.push("Sarcasm can be easily misinterpreted in text. Consider being more direct.");
     mockResults.suggestions.push("Add emojis to clarify your tone if you want to keep the sarcasm.");
+    mockResults.emojiMeter = "😏 Sarcastic tone detected";
   } else if (mockResults.overallTone === "passive") {
     mockResults.suggestions.push("Your message might come across as uncertain. Try being more direct.");
     mockResults.suggestions.push("Remove phrases like 'kind of' and 'sort of' to sound more confident.");
+    mockResults.emojiMeter = "😐 Passive tone detected";
+  } else if (mockResults.overallTone === "positive") {
+    mockResults.suggestions.push("Your message has a positive tone. Great job!");
+    mockResults.emojiMeter = "😊 Positive tone detected";
+  } else {
+    mockResults.suggestions.push("Your message has a neutral tone, which is appropriate for many contexts.");
+    mockResults.emojiMeter = "🙂 Neutral tone detected";
   }
 
   // Generate highlighted text
@@ -96,6 +106,8 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     positive: `I'm excited about this new feature and believe it offers great potential for improvement!`,
     neutral: `The feature has been added to the product and will be available after the update.`,
     professional: `We are pleased to announce the integration of this feature, which will enhance the user experience considerably.`,
+    friendly: `Hey everyone! We've added this awesome new feature that we think you'll love. Can't wait to hear what you think!`,
+    bold: `This game-changing feature is going to revolutionize how you use our product. Don't miss out!`
   };
   
   return alternatives[tone as keyof typeof alternatives] || text;
@@ -154,6 +166,17 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
       case "sarcastic": return "bg-tone-sarcastic text-white";
       case "passive": return "bg-tone-passive text-white";
       default: return "bg-primary";
+    }
+  };
+
+  const getToneEmoji = (tone: string) => {
+    switch (tone) {
+      case "positive": return "😊";
+      case "negative": return "😡";
+      case "neutral": return "🙂";
+      case "sarcastic": return "😏";
+      case "passive": return "😐";
+      default: return "🤔";
     }
   };
   
@@ -230,11 +253,24 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Tone Analysis</h3>
-            <Badge className={getToneColor(analysis.overallTone)}>
-              {analysis.overallTone.charAt(0).toUpperCase() + analysis.overallTone.slice(1)} 
-              ({analysis.confidence}%)
-            </Badge>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center px-3 py-1 bg-card rounded-md border">
+                <span className="text-xl mr-2">{getToneEmoji(analysis.overallTone)}</span>
+                <span className="text-sm font-medium">
+                  {analysis.overallTone.charAt(0).toUpperCase() + analysis.overallTone.slice(1)}
+                </span>
+              </div>
+              <Badge className={getToneColor(analysis.overallTone)}>
+                {analysis.confidence}%
+              </Badge>
+            </div>
           </div>
+          
+          {analysis.emojiMeter && (
+            <div className="bg-card p-3 rounded-md border flex items-center justify-center text-center">
+              <div className="text-lg">{analysis.emojiMeter}</div>
+            </div>
+          )}
           
           <Card className="overflow-hidden">
             <Tabs defaultValue="highlight">
@@ -294,21 +330,35 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                       className="cursor-pointer"
                       onClick={() => setTargetTone("positive")}
                     >
-                      Positive
+                      <span className="mr-1">😊</span> Positive
                     </Badge>
                     <Badge 
                       variant={targetTone === "neutral" ? "default" : "outline"}
                       className="cursor-pointer"
                       onClick={() => setTargetTone("neutral")}
                     >
-                      Neutral
+                      <span className="mr-1">🙂</span> Neutral
                     </Badge>
                     <Badge 
                       variant={targetTone === "professional" ? "default" : "outline"}
                       className="cursor-pointer"
                       onClick={() => setTargetTone("professional")}
                     >
-                      Professional
+                      <span className="mr-1">💼</span> Professional
+                    </Badge>
+                    <Badge 
+                      variant={targetTone === "friendly" ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setTargetTone("friendly")}
+                    >
+                      <span className="mr-1">👋</span> Friendly
+                    </Badge>
+                    <Badge 
+                      variant={targetTone === "bold" ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setTargetTone("bold")}
+                    >
+                      <span className="mr-1">💪</span> Bold
                     </Badge>
                   </div>
                 </div>

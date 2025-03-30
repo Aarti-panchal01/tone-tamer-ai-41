@@ -10,7 +10,7 @@ interface AIFeatureCardProps {
 
 const AIFeatureCard: React.FC<AIFeatureCardProps> = ({ icon, title, description }) => {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{icon}</span>
