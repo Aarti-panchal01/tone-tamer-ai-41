@@ -8,6 +8,27 @@ const Index: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1">
+        <style jsx global>{`
+          .negative-highlight {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-bottom: 2px solid rgb(239, 68, 68);
+          }
+          .sarcastic-highlight {
+            background-color: rgba(245, 158, 11, 0.2);
+            border-bottom: 2px solid rgb(245, 158, 11);
+          }
+          .passive-highlight {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-bottom: 2px solid rgb(59, 130, 246);
+          }
+          .harmful-highlight {
+            background-color: rgba(220, 38, 38, 0.2);
+            border-bottom: 2px solid rgb(220, 38, 38);
+            display: inline-block;
+            padding: 2px 4px;
+            border-radius: 4px;
+          }
+        `}</style>
         <Dashboard />
       </main>
       <footer className="py-6 border-t">

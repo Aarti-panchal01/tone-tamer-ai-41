@@ -1,3 +1,4 @@
+
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,9 +12,35 @@ const mockAnalyzeText = (text: string) => {
   if (!text.trim()) return null;
   
   const lowerCaseText = text.toLowerCase();
-  const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'].some(
-    word => lowerCaseText.includes(word)
-  );
+  
+  // Check for harmful content
+  const harmfulKeywords = ['kill myself', 'suicide', 'harm myself', 'end my life', 'want to die'];
+  const hasHarmfulContent = harmfulKeywords.some(phrase => lowerCaseText.includes(phrase));
+  
+  if (hasHarmfulContent) {
+    return {
+      overallTone: "harmful",
+      confidence: 90,
+      triggers: [
+        {
+          word: text.trim(),
+          index: 0,
+          type: "harmful"
+        }
+      ],
+      suggestions: [
+        "This content suggests potential harm. Please consider reaching out for support.",
+        "If you're experiencing distress, please contact a mental health professional or crisis helpline.",
+        "Remember that help is available. Consider reaching out to supportive friends, family, or professionals."
+      ],
+      highlightedText: `<span class="harmful-highlight highlighted-word">${text}</span>`,
+      emojiMeter: "⚠️ Potentially harmful content detected",
+      requiresAttention: true
+    };
+  }
+  
+  const negativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'];
+  const hasNegativeKeywords = negativeKeywords.some(word => lowerCaseText.includes(word));
   
   const hasUpperCase = text === text.toUpperCase() && text.length > 5;
   const hasExclamations = (text.match(/!/g) || []).length > 1;
@@ -38,7 +65,8 @@ const mockAnalyzeText = (text: string) => {
     triggers: [],
     suggestions: [],
     highlightedText: text,
-    emojiMeter
+    emojiMeter,
+    requiresAttention: false
   };
 
   const negativeWords = ["hate", "terrible", "awful", "worst", "stupid", "ridiculous", "rude"];
@@ -112,7 +140,16 @@ const mockAnalyzeText = (text: string) => {
 const mockGenerateAlternative = (text: string, tone: string) => {
   if (!text.trim()) return "";
   
+  // Special handling for harmful content
   const lowerCaseText = text.toLowerCase();
+  const harmfulKeywords = ['kill myself', 'suicide', 'harm myself', 'end my life', 'want to die'];
+  const hasHarmfulContent = harmfulKeywords.some(phrase => lowerCaseText.includes(phrase));
+  
+  if (hasHarmfulContent) {
+    return "I'm having a difficult time and would appreciate some support or someone to talk to.";
+  }
+  
+  const lowerCaseTone = tone.toLowerCase();
   const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'].some(
     word => lowerCaseText.includes(word)
   );
@@ -121,26 +158,26 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     const alternatives = {
       positive: `I'm having a challenging day but looking forward to things improving soon! Every obstacle is a stepping stone to something better. ✨`,
       neutral: `Today has been difficult and I've encountered some frustrating interactions. Looking to reset and move forward.`,
-      professional: `I'm experiencing some challenges at the moment and finding interactions difficult. I'm working on constructive solutions to improve the situation.`,
+      professional: `We are pleased to announce the integration of this feature, which will enhance the user experience considerably.`,
       friendly: `Having a rough day today! Hoping things look up soon - how's everyone else doing? We're all in this together! 💖`,
       bold: `Challenging day ahead but I'm DETERMINED to overcome these obstacles and move forward! Nothing will stop me! 💪`,
       casual: `Ugh, today's been a bit much tbh. But tomorrow's a new day, right? Just gotta vibe through it.`,
       inspirational: `Even in difficult moments, I'm grateful for the lessons they bring. Growing through what I'm going through! 🌱`
     };
-    return alternatives[tone as keyof typeof alternatives] || text;
+    return alternatives[lowerCaseTone as keyof typeof alternatives] || text;
   }
   
   const alternatives = {
     positive: `I'm excited about this new feature and believe it offers great potential for improvement! Can't wait to see where this takes us! ✨`,
     neutral: `The feature has been added to the product and will be available after the update. Users can access it through the main dashboard.`,
-    professional: `We are pleased to announce the integration of this feature, which will enhance the user experience considerably. We anticipate positive outcomes from this implementation.`,
+    professional: `We are pleased to announce the integration of this feature, which will enhance the user experience considerably.`,
     friendly: `Hey everyone! We've added this awesome new feature that we think you'll love. Can't wait to hear what you think! Let us know your thoughts! 💖`,
     bold: `This GAME-CHANGING feature is going to revolutionize how you use our product. Don't miss out on the opportunity to transform your experience!`,
     casual: `So we just dropped this cool new thing and honestly? It's pretty fire. Check it out when you get a chance, no pressure.`,
     inspirational: `Innovation happens one feature at a time. We're proud to introduce this new capability that will empower you to achieve more! 🚀`
   };
   
-  return alternatives[tone as keyof typeof alternatives] || text;
+  return alternatives[lowerCaseTone as keyof typeof alternatives] || text;
 };
 
 interface ToneInputProps {
@@ -148,7 +185,7 @@ interface ToneInputProps {
 }
 
 const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
-  const [inputText, setInputText] = useState("I HATE MY LIFE AND THINK PEOPLE ARE RUDE !!!");
+  const [inputText, setInputText] = useState("");
   const [analysis, setAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [targetTone, setTargetTone] = useState("professional");
@@ -157,12 +194,6 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   const [alternatives, setAlternatives] = useState<string[]>([]);
   const [selectedAlternative, setSelectedAlternative] = useState(0);
   const [copied, setCopied] = useState(false);
-  
-  useEffect(() => {
-    if (inputText) {
-      analyzeText(inputText);
-    }
-  }, []);
   
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -180,6 +211,12 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
       const results = mockAnalyzeText(text);
       setAnalysis(results);
       setIsAnalyzing(false);
+      
+      if (results && results.requiresAttention) {
+        toast.warning("This content may require attention", {
+          description: "Please be mindful of potentially harmful content."
+        });
+      }
     }, 800);
   };
   
@@ -190,30 +227,12 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
     setAlternatives([]);
     
     setTimeout(() => {
-      const alternative1 = mockGenerateAlternative(inputText, targetTone);
-      const alternative2 = mockGenerateAlternative(inputText, targetTone);
-      const alternative3 = mockGenerateAlternative(inputText, targetTone);
+      const alternative = mockGenerateAlternative(inputText, targetTone);
       
-      const uniqueAlternatives = [alternative1];
-      
-      if (alternative2 !== alternative1) {
-        uniqueAlternatives.push(alternative2);
-      } else {
-        uniqueAlternatives.push(alternative2 + " I appreciate your understanding.");
-      }
-      
-      if (alternative3 !== alternative1 && alternative3 !== alternative2) {
-        uniqueAlternatives.push(alternative3);
-      } else {
-        uniqueAlternatives.push(alternative3 + " Thank you for your attention to this matter.");
-      }
-      
-      setAlternatives(uniqueAlternatives);
-      setAlternativeText(uniqueAlternatives[0]);
+      setAlternatives([alternative]);
+      setAlternativeText(alternative);
       setSelectedAlternative(0);
       setIsGenerating(false);
-      
-      toast.success("Multiple rewrites generated! Swipe to view options.");
     }, 1200);
   };
   
@@ -235,11 +254,10 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   
   const getToneColor = (tone: string) => {
     switch (tone) {
-      case "positive": return "bg-tone-positive text-white";
-      case "negative": return "bg-tone-negative text-white";
-      case "neutral": return "bg-tone-neutral text-white";
-      case "sarcastic": return "bg-tone-sarcastic text-white";
-      case "passive": return "bg-tone-passive text-white";
+      case "positive": return "bg-green-500 text-white";
+      case "negative": return "bg-red-500 text-white";
+      case "neutral": return "bg-gray-500 text-white";
+      case "harmful": return "bg-red-600 text-white";
       default: return "bg-primary";
     }
   };
@@ -249,8 +267,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
       case "positive": return "😊";
       case "negative": return "😡";
       case "neutral": return "🙂";
-      case "sarcastic": return "😏";
-      case "passive": return "😐";
+      case "harmful": return "⚠️";
       default: return "🤔";
     }
   };
@@ -275,20 +292,6 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   
   const currentPlatform = platformConfig[platform as keyof typeof platformConfig];
   
-  const cycleAlternative = (direction: 'next' | 'prev') => {
-    if (alternatives.length === 0) return;
-    
-    let newIndex = selectedAlternative;
-    if (direction === 'next') {
-      newIndex = (selectedAlternative + 1) % alternatives.length;
-    } else {
-      newIndex = selectedAlternative - 1 < 0 ? alternatives.length - 1 : selectedAlternative - 1;
-    }
-    
-    setSelectedAlternative(newIndex);
-    setAlternativeText(alternatives[newIndex]);
-  };
-  
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
@@ -305,7 +308,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
         <div className="p-4">
           <Textarea
             placeholder={`Write your ${currentPlatform.name} post here...`}
-            className="min-h-[120px] mb-2 text-base resize-none"
+            className="min-h-[120px] mb-2 text-base resize-none bg-[#f7f7ff]"
             value={inputText}
             onChange={handleInputChange}
             maxLength={currentPlatform.maxLength}
@@ -343,7 +346,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Tone Analysis</h3>
             <div className="flex items-center space-x-2">
-              <div className="flex items-center px-3 py-1 bg-card rounded-md border">
+              <div className="flex items-center px-3 py-1 rounded-md border">
                 <span className="text-xl mr-2">{getToneEmoji(analysis.overallTone)}</span>
                 <span className="text-sm font-medium">
                   {analysis.overallTone.charAt(0).toUpperCase() + analysis.overallTone.slice(1)}
@@ -362,7 +365,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
           )}
           
           <Card className="overflow-hidden">
-            <Tabs defaultValue="highlight">
+            <Tabs defaultValue="rewrite">
               <TabsList className="w-full grid grid-cols-3">
                 <TabsTrigger value="highlight">Tone Heatmap</TabsTrigger>
                 <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
@@ -416,52 +419,38 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                   <div className="flex flex-wrap gap-2">
                     <Badge 
                       variant={targetTone === "positive" ? "default" : "outline"}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${targetTone === "positive" ? "bg-green-500 hover:bg-green-600" : ""}`}
                       onClick={() => setTargetTone("positive")}
                     >
                       <span className="mr-1">😊</span> Positive
                     </Badge>
                     <Badge 
                       variant={targetTone === "neutral" ? "default" : "outline"}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${targetTone === "neutral" ? "bg-gray-500 hover:bg-gray-600" : ""}`}
                       onClick={() => setTargetTone("neutral")}
                     >
                       <span className="mr-1">🙂</span> Neutral
                     </Badge>
                     <Badge 
                       variant={targetTone === "professional" ? "default" : "outline"}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${targetTone === "professional" ? "bg-purple-500 hover:bg-purple-600" : ""}`}
                       onClick={() => setTargetTone("professional")}
                     >
                       <span className="mr-1">💼</span> Professional
                     </Badge>
                     <Badge 
                       variant={targetTone === "friendly" ? "default" : "outline"}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${targetTone === "friendly" ? "bg-blue-500 hover:bg-blue-600" : ""}`}
                       onClick={() => setTargetTone("friendly")}
                     >
                       <span className="mr-1">👋</span> Friendly
                     </Badge>
                     <Badge 
                       variant={targetTone === "bold" ? "default" : "outline"}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${targetTone === "bold" ? "bg-amber-500 hover:bg-amber-600" : ""}`}
                       onClick={() => setTargetTone("bold")}
                     >
                       <span className="mr-1">💪</span> Bold
-                    </Badge>
-                    <Badge 
-                      variant={targetTone === "casual" ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setTargetTone("casual")}
-                    >
-                      <span className="mr-1">😎</span> Casual
-                    </Badge>
-                    <Badge 
-                      variant={targetTone === "inspirational" ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setTargetTone("inspirational")}
-                    >
-                      <span className="mr-1">✨</span> Inspirational
                     </Badge>
                   </div>
                 </div>
@@ -469,9 +458,9 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                 <Button
                   variant="outline" 
                   size="sm"
-                  className="mb-3"
+                  className="mb-3 flex items-center"
                   onClick={generateAlternative}
-                  disabled={isGenerating}
+                  disabled={isGenerating || !inputText.trim()}
                 >
                   {isGenerating ? (
                     <>
@@ -480,8 +469,8 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Generate AI Rewrites
+                      <Edit className="mr-2 h-4 w-4" />
+                      Rewrite with AI
                     </>
                   )}
                 </Button>
@@ -490,38 +479,9 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                   <div className="space-y-4">
                     <div className="relative">
                       <div className="p-4 bg-background rounded-md border border-primary/20 min-h-[120px] shadow-sm">
-                        <div className="flex justify-between items-center mb-2">
-                          <Badge variant="outline" className="bg-primary/10">
-                            Option {selectedAlternative + 1}/{alternatives.length}
-                          </Badge>
-                          
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => cycleAlternative('prev')}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="m15 18-6-6 6-6"/>
-                              </svg>
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => cycleAlternative('next')}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="m9 18 6-6-6-6"/>
-                              </svg>
-                            </Button>
-                          </div>
-                        </div>
-                        
                         <p className="whitespace-pre-wrap">{alternativeText}</p>
                         
-                        <div className="absolute -bottom-3 right-4 flex gap-2">
+                        <div className="mt-4 flex gap-2 justify-end">
                           <Button
                             size="sm"
                             variant="secondary"
@@ -544,39 +504,32 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                           <Button
                             size="sm"
                             variant="default"
-                            className="shadow-sm"
+                            className="shadow-sm text-purple-600 bg-purple-100 hover:bg-purple-200 hover:text-purple-700"
                             onClick={useAlternative}
                           >
-                            Use This Version
+                            Use this version
                           </Button>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="flex justify-center gap-1 pt-2">
-                      {alternatives.map((_, index) => (
-                        <button
-                          key={index}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            index === selectedAlternative ? 'bg-primary scale-125' : 'bg-muted'
-                          }`}
-                          onClick={() => {
-                            setSelectedAlternative(index);
-                            setAlternativeText(alternatives[index]);
-                          }}
-                        />
-                      ))}
-                    </div>
                   </div>
                 ) : (
-                  <div className="bg-muted/30 border border-dashed rounded-md p-6 flex flex-col items-center justify-center text-center space-y-2">
-                    <div className="rounded-full bg-muted/50 p-3">
-                      <Sparkles className="h-6 w-6 text-muted-foreground" />
+                  inputText.trim() ? (
+                    <div className="bg-muted/30 border border-dashed rounded-md p-6 flex flex-col items-center justify-center text-center space-y-2">
+                      <div className="rounded-full bg-muted/50 p-3">
+                        <Edit className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p className="text-muted-foreground">
+                        Click "Rewrite with AI" to get a tone-adjusted alternative
+                      </p>
                     </div>
-                    <p className="text-muted-foreground">
-                      Click "Generate AI Rewrites" to get multiple tone-adjusted alternatives
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="bg-muted/30 border border-dashed rounded-md p-6 flex flex-col items-center justify-center text-center space-y-2">
+                      <p className="text-muted-foreground">
+                        Write some text to generate an AI rewrite
+                      </p>
+                    </div>
+                  )
                 )}
               </TabsContent>
             </Tabs>
