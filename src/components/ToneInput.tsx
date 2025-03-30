@@ -146,60 +146,52 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     return "I'm having a difficult time and would appreciate some support or someone to talk to.";
   }
   
-  const lowerCaseTone = tone.toLowerCase();
-  
-  const getSampleText = (toneKey: string) => {
-    const samples = {
-      positive: [
-        "I'm excited about this new feature and believe it offers great potential for improvement! Can't wait to see where this takes us! ✨",
-        "This is absolutely fantastic news! I'm thrilled about the possibilities this opens up for all of us! Looking forward to the positive impact! 🌟",
-        "What a wonderful development! I'm genuinely happy to share this with everyone and can't wait to see the amazing results! 😊"
-      ],
-      negative: [
-        "This is extremely disappointing and frustrating. I expected much better results.",
-        "I'm completely unsatisfied with how this turned out. The quality is far below expectations.",
-        "This is not at all what I wanted. I'm very unhappy with the outcome."
-      ],
-      neutral: [
-        "The feature has been added to the product and will be available after the update. Users can access it through the main dashboard.",
-        "This update contains several changes to the system. Please review the documentation for details on the modifications.",
-        "We've completed the process as requested. Standard protocols were followed throughout the implementation."
-      ],
-      professional: [
-        "We are pleased to announce the integration of this feature, which will enhance the user experience considerably.",
-        "I'd like to inform you that we have completed the requested modifications according to specifications.",
-        "After careful consideration of the requirements, we have implemented a solution that addresses the key objectives."
-      ],
-      friendly: [
-        "Hey everyone! We've added this awesome new feature that we think you'll love. Can't wait to hear what you think! Let us know your thoughts! 💖",
-        "Hi there! Just wanted to share some exciting news with you all - we've made those changes you asked for! Hope you enjoy them! 🥰",
-        "Hello friends! Just dropping by with an update - the new stuff is ready to go and we're super excited to hear your feedback! 👋"
-      ],
-      bold: [
-        "This GAME-CHANGING feature is going to revolutionize how you use our product. Don't miss out on the opportunity to transform your experience!",
-        "ATTENTION: This is the BREAKTHROUGH you've been waiting for! Take action NOW to seize this EXTRAORDINARY opportunity!",
-        "We've COMPLETELY REIMAGINED the way this works and the results are SPECTACULAR! This will TRANSFORM your entire approach!"
-      ],
-      casual: [
-        "So we just dropped this cool new thing and honestly? It's pretty fire. Check it out when you get a chance, no pressure.",
-        "Just FYI, that update you wanted is done. Pretty neat stuff, if you ask me. Lemme know what you think whenever.",
-        "Hey, so that thing is ready now. Turned out pretty decent, I think. Give it a look sometime."
-      ],
-      genz: [
-        "FR FR just dropped this bussin feature and it's giving main character energy! No cap, it's a whole vibe. It's so fire you'll be SHOOK! 💅✨",
-        "Bestie, this update is LITERALLY eating and leaving no crumbs! Slay fr and that's on periodt. If you're not using it, you're so cheugy! 😭🤌",
-        "The way this new feature ate and left zero crumbs?? Ur about to be obsessed, no cap! It's giving everything it's supposed to give! 💯🔥"
-      ],
-      inspirational: [
-        "Innovation happens one feature at a time. We're proud to introduce this new capability that will empower you to achieve more! 🚀",
-        "Every step forward is a step toward greatness. This update represents our commitment to helping you reach your full potential! ✨",
-        "Believe in the power of progress. This new addition is designed to inspire you to break barriers and achieve the extraordinary! 🌟"
-      ]
-    };
-    
-    const toneOptions = samples[toneKey as keyof typeof samples] || samples.neutral;
-    const index = Math.abs(text.length % toneOptions.length);
-    return toneOptions[index];
+  const toneOutputs = {
+    positive: [
+      "I'm thrilled about this progress and see so much potential! Every step forward is a victory! 😊✨",
+      "What a fantastic development! I'm genuinely excited about the amazing possibilities this creates! 🌟",
+      "I'm absolutely delighted with these results! This is such wonderful news and I'm feeling very optimistic! 💖"
+    ],
+    negative: [
+      "This is extremely disappointing. I expected much better results than this.",
+      "I'm completely unsatisfied with the outcome. The quality is far below acceptable standards.",
+      "This is not at all what I wanted. I'm very unhappy with how things turned out."
+    ],
+    neutral: [
+      "The process has been completed as requested. The results are now available for review.",
+      "This update contains several modifications to the system. Documentation is available for reference.",
+      "The features have been implemented according to specifications. Testing can now begin."
+    ],
+    professional: [
+      "We're pleased to inform you that the requested modifications have been successfully implemented per specifications.",
+      "Upon thorough analysis of the requirements, we have developed a solution that effectively addresses the key objectives.",
+      "I would like to confirm that we have completed the integration as discussed, which should enhance overall functionality."
+    ],
+    friendly: [
+      "Hey there! Just wanted to let you know we've added that awesome feature you asked for! Can't wait to hear what you think! 💖",
+      "Hi friend! Amazing news - we've made those changes you were hoping for! Hope you love them as much as we do! 🥰",
+      "Hello lovely! Just popping in to share that everything you requested is ready to go! So excited for you to see it! ✨"
+    ],
+    bold: [
+      "This GROUNDBREAKING update is going to REVOLUTIONIZE how you interact with our platform! Don't miss this INCREDIBLE opportunity!",
+      "ATTENTION: We've just unleashed a GAME-CHANGING feature that will TRANSFORM your entire experience! Act NOW!",
+      "We've COMPLETELY REIMAGINED the interface and the results are SPECTACULAR! This will DRAMATICALLY improve your workflow!"
+    ],
+    casual: [
+      "So yeah, we just rolled out that thing you wanted. Pretty cool if you ask me. Check it out whenever.",
+      "Just FYI, that update is done. Turned out pretty decent. Let me know what you think when you get a chance.",
+      "Hey, so that stuff you asked for is ready now. No rush, but it's there when you need it."
+    ],
+    genz: [
+      "FR FR this update is so bussin, no cap! It's giving main character energy and that's on periodt! 💅✨",
+      "Bestie, this feature is LITERALLY eating and leaving no crumbs! It's so fire you'll be SHOOK! 😭🤌",
+      "The way this update ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥"
+    ],
+    inspirational: [
+      "Every step forward is a testament to your vision. This update represents not just code, but possibility—embrace it! 🚀",
+      "Behind every feature lies a journey of growth. Let this improvement be the wings that elevate your project to new heights! ✨",
+      "The path to excellence is paved with continuous improvement. This update is not the destination, but another beautiful step in your journey! 🌟"
+    ]
   };
   
   const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'].some(
@@ -208,20 +200,25 @@ const mockGenerateAlternative = (text: string, tone: string) => {
   
   if (hasNegativeKeywords || text === text.toUpperCase()) {
     const negativeAlternatives = {
-      positive: `I'm having a challenging day but looking forward to things improving soon! Every obstacle is a stepping stone to something better. ✨`,
-      neutral: `Today has been difficult and I've encountered some frustrating interactions. Looking to reset and move forward.`,
-      professional: `I regret to inform that we have experienced some challenges. We are actively working on resolving these issues and appreciate your patience.`,
-      friendly: `Having a rough day today! Hoping things look up soon - how's everyone else doing? We're all in this together! 💖`,
-      bold: `Challenging day ahead but I'm DETERMINED to overcome these obstacles and move forward! Nothing will stop me! 💪`,
-      casual: `Ugh, today's been a bit much tbh. But tomorrow's a new day, right? Just gotta vibe through it.`,
-      genz: `NGL, this day's lowkey been mid af. Straight up not vibing rn. But we move, no cap! 😭✋`,
-      inspirational: `Even in difficult moments, I'm grateful for the lessons they bring. Growing through what I'm going through! 🌱`
+      positive: "I'm experiencing some challenges but remain optimistic about finding solutions! Every obstacle is just a stepping stone to something better. ✨",
+      neutral: "I'm encountering some difficulties with this situation. Looking for ways to address these issues efficiently.",
+      professional: "We've identified several challenges in the current implementation. We're developing a structured approach to resolve these matters promptly.",
+      friendly: "Having a bit of a rough time with this! But hey, we'll figure it out together! How's everyone else handling similar situations? 💖",
+      bold: "Facing some MAJOR CHALLENGES right now but I'm DETERMINED to overcome them! Nothing will stand in the way of SUCCESS! 💪",
+      casual: "Tbh this isn't really working out great. Kind of a bummer, but whatever, we'll figure something out I guess.",
+      genz: "This is lowkey stressing me out fr fr. Not the vibe I was looking for. But we move! No cap! 😭✋",
+      inspirational: "Within every challenge lies the seed of opportunity. I'm embracing this moment of difficulty as the soil from which growth will bloom! 🌱"
     };
     
-    return negativeAlternatives[lowerCaseTone as keyof typeof negativeAlternatives] || getSampleText(lowerCaseTone);
+    return negativeAlternatives[tone as keyof typeof negativeAlternatives] || negativeAlternatives.neutral;
   }
   
-  return getSampleText(lowerCaseTone);
+  const toneOptions = toneOutputs[tone as keyof typeof toneOutputs];
+  if (!toneOptions) {
+    return toneOutputs.neutral[Math.abs(text.length % toneOutputs.neutral.length)];
+  }
+  
+  return toneOptions[Math.abs(text.length % toneOptions.length)];
 };
 
 interface ToneInputProps {
@@ -349,7 +346,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   const currentPlatform = platformConfig[platform as keyof typeof platformConfig];
   
   useEffect(() => {
-    if (inputText.trim() && alternatives.length > 0) {
+    if (inputText.trim() && analysis !== null) {
       generateAlternative();
     }
   }, [targetTone]);
