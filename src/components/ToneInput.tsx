@@ -147,101 +147,116 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     return "I'm having a difficult time and would appreciate some support or someone to talk to.";
   }
   
-  // Define multiple different alternatives for each tone to ensure variety
-  const toneOutputs: Record<string, string[]> = {
-    positive: [
-      "I'm thrilled about this progress and see so much potential! Every step forward is a victory! 😊✨",
-      "What a fantastic development! I'm genuinely excited about the amazing possibilities this creates! 🌟",
-      "I'm absolutely delighted with these results! This is such wonderful news and I'm feeling very optimistic! 💖",
-      "So happy about how things are going! This is exactly the kind of positive outcome I was hoping for! 🎉",
-      "This is such great news! I'm feeling incredibly positive about the future and all the exciting possibilities! 💫"
-    ],
-    negative: [
-      "This is extremely disappointing. I expected much better results than this.",
-      "I'm completely unsatisfied with the outcome. The quality is far below acceptable standards.",
-      "This is not at all what I wanted. I'm very unhappy with how things turned out.",
-      "These results are terrible. I can't believe how poorly this has been executed.",
-      "I'm extremely frustrated with this situation. Nothing is working as it should."
-    ],
-    neutral: [
-      "The process has been completed as requested. The results are now available for review.",
-      "This update contains several modifications to the system. Documentation is available for reference.",
-      "The features have been implemented according to specifications. Testing can now begin.",
-      "All requested changes have been applied. Please verify the outcomes at your convenience.",
-      "The project is proceeding as scheduled. No significant deviations have been observed."
-    ],
-    professional: [
-      "We're pleased to inform you that the requested modifications have been successfully implemented per specifications.",
-      "Upon thorough analysis of the requirements, we have developed a solution that effectively addresses the key objectives.",
-      "I would like to confirm that we have completed the integration as discussed, which should enhance overall functionality.",
-      "After careful consideration of your feedback, we've implemented changes that align with industry best practices.",
-      "I'm writing to inform you that the project milestones have been achieved according to our established timeline."
-    ],
-    friendly: [
-      "Hey there! Just wanted to let you know we've added that awesome feature you asked for! Can't wait to hear what you think! 💖",
-      "Hi friend! Amazing news - we've made those changes you were hoping for! Hope you love them as much as we do! 🥰",
-      "Hello lovely! Just popping in to share that everything you requested is ready to go! So excited for you to see it! ✨",
-      "Hey you! Guess what? Those super cool updates you wanted are all done! Let me know how you like them! 🤗",
-      "Hi there, sunshine! Just dropping a quick note to say your awesome request is all taken care of! Enjoy! 💝"
-    ],
-    bold: [
-      "This GROUNDBREAKING update is going to REVOLUTIONIZE how you interact with our platform! Don't miss this INCREDIBLE opportunity!",
-      "ATTENTION: We've just unleashed a GAME-CHANGING feature that will TRANSFORM your entire experience! Act NOW!",
-      "We've COMPLETELY REIMAGINED the interface and the results are SPECTACULAR! This will DRAMATICALLY improve your workflow!",
-      "This is the BIGGEST and MOST IMPORTANT upgrade we've EVER released! You WON'T BELIEVE the AMAZING results!",
-      "PREPARE to be AMAZED by these REVOLUTIONARY changes that will INSTANTLY boost your productivity to NEW HEIGHTS!"
-    ],
-    casual: [
-      "So yeah, we just rolled out that thing you wanted. Pretty cool if you ask me. Check it out whenever.",
-      "Just FYI, that update is done. Turned out pretty decent. Let me know what you think when you get a chance.",
-      "Hey, so that stuff you asked for is ready now. No rush, but it's there when you need it.",
-      "That update you mentioned? All done. Nothing too fancy, but it does the job. Let me know if it works for you.",
-      "Just wanted to give you a heads up that we finished that thing from before. It's ready whenever you wanna take a look."
-    ],
-    genz: [
-      "FR FR this update is so bussin, no cap! It's giving main character energy and that's on periodt! 💅✨",
-      "Bestie, this feature is LITERALLY eating and leaving no crumbs! It's so fire you'll be SHOOK! 😭🤌",
-      "The way this update ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥",
-      "I can't even with how slay this new feature is! It's lowkey POPing off. Not me being obsessed with it! 💁‍♀️✌️",
-      "This update? IYKYK. Straight up vibing and it's honestly such a flex. Living for this energy rn! 🙌🤪"
-    ],
-    inspirational: [
-      "Every step forward is a testament to your vision. This update represents not just code, but possibility—embrace it! 🚀",
-      "Behind every feature lies a journey of growth. Let this improvement be the wings that elevate your project to new heights! ✨",
-      "The path to excellence is paved with continuous improvement. This update is not the destination, but another beautiful step in your journey! 🌟",
-      "Believe in the power of progress, for in these changes lies the seed of transformation. Your vision is becoming reality, one step at a time! 🌱",
-      "In the garden of innovation, each feature we plant today becomes tomorrow's opportunity. Watch as your dreams blossom into reality! 🌈"
-    ]
+  // Define transformation templates for each tone
+  const toneTransformations: Record<string, (input: string) => string> = {
+    positive: (input) => {
+      const phrases = [
+        `I'm thrilled about ${input.replace(/\b(hate|dislike|awful|terrible)\b/g, 'love')}! Every step forward is a victory! 😊✨`,
+        `What a fantastic thing to share about ${input.replace(/\b(bad|negative|poor)\b/g, 'great')}! I'm genuinely excited about this! 🌟`,
+        `I'm absolutely delighted with ${input.toLowerCase().includes('not') ? input.replace(/\bnot\b/g, '') : input}! This is wonderful news and I'm feeling very optimistic! 💖`,
+        `So happy about ${input.replace(/\b(hate|dislike|awful|terrible)\b/g, 'appreciate')}! This is exactly the kind of positive outcome I was hoping for! 🎉`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    negative: (input) => {
+      const phrases = [
+        `This is extremely disappointing: ${input}. I expected much better results.`,
+        `I'm completely unsatisfied with ${input}. The quality is far below acceptable standards.`,
+        `This is not at all what I wanted: ${input}. I'm very unhappy with how things turned out.`,
+        `These results are terrible. ${input} has been poorly executed.`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    neutral: (input) => {
+      const phrases = [
+        `Regarding ${input}: the process has been completed as requested. The results are now available for review.`,
+        `This update contains: ${input}. Documentation is available for reference.`,
+        `${input} has been implemented according to specifications. Testing can now begin.`,
+        `All requested changes have been applied to ${input}. Please verify the outcomes at your convenience.`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    professional: (input) => {
+      const phrases = [
+        `We're pleased to inform you that regarding "${input}", the requested modifications have been successfully implemented per specifications.`,
+        `Upon thorough analysis of "${input}", we have developed a solution that effectively addresses the key objectives.`,
+        `I would like to confirm that we have completed the integration of "${input}" as discussed, which should enhance overall functionality.`,
+        `After careful consideration of your feedback on "${input}", we've implemented changes that align with industry best practices.`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    friendly: (input) => {
+      const phrases = [
+        `Hey there! Just wanted to let you know about "${input}" - it's looking awesome! Can't wait to hear what you think! 💖`,
+        `Hi friend! Amazing news about "${input}" - we've made those changes you were hoping for! Hope you love them as much as we do! 🥰`,
+        `Hello lovely! Just popping in to share that "${input}" is ready to go! So excited for you to see it! ✨`,
+        `Hey you! Guess what? "${input}" is all done! Let me know how you like it! 🤗`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    bold: (input) => {
+      const phrases = [
+        `This GROUNDBREAKING update regarding "${input}" is going to REVOLUTIONIZE how you interact with our platform! Don't miss this INCREDIBLE opportunity!`,
+        `ATTENTION: We've just unleashed a GAME-CHANGING feature for "${input}" that will TRANSFORM your entire experience! Act NOW!`,
+        `We've COMPLETELY REIMAGINED "${input}" and the results are SPECTACULAR! This will DRAMATICALLY improve your workflow!`,
+        `"${input}" is the BIGGEST and MOST IMPORTANT upgrade we've EVER released! You WON'T BELIEVE the AMAZING results!`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    casual: (input) => {
+      const phrases = [
+        `So yeah, we just rolled out that thing about "${input}". Pretty cool if you ask me. Check it out whenever.`,
+        `Just FYI, that update on "${input}" is done. Turned out pretty decent. Let me know what you think when you get a chance.`,
+        `Hey, so that stuff you asked for about "${input}" is ready now. No rush, but it's there when you need it.`,
+        `That update you mentioned on "${input}"? All done. Nothing too fancy, but it does the job. Let me know if it works for you.`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    genz: (input) => {
+      const phrases = [
+        `FR FR "${input}" is so bussin, no cap! It's giving main character energy and that's on periodt! 💅✨`,
+        `Bestie, this "${input}" feature is LITERALLY eating and leaving no crumbs! It's so fire you'll be SHOOK! 😭🤌`,
+        `The way "${input}" ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥`,
+        `I can't even with how slay "${input}" is! It's lowkey POPing off. Not me being obsessed with it! 💁‍♀️✌️`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    },
+    
+    inspirational: (input) => {
+      const phrases = [
+        `Every step forward with "${input}" is a testament to your vision. This represents not just code, but possibility—embrace it! 🚀`,
+        `Behind "${input}" lies a journey of growth. Let this improvement be the wings that elevate your project to new heights! ✨`,
+        `The path to excellence with "${input}" is paved with continuous improvement. This is not the destination, but another beautiful step in your journey! 🌟`,
+        `Believe in the power of progress with "${input}", for in these changes lies the seed of transformation. Your vision is becoming reality, one step at a time! 🌱`
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    }
   };
   
   const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous', 'poor'].some(
     word => lowerCaseText.includes(word)
   );
   
-  if (hasNegativeKeywords || text === text.toUpperCase()) {
-    const negativeAlternatives: Record<string, string> = {
-      positive: "I'm experiencing some challenges but remain optimistic about finding solutions! Every obstacle is just a stepping stone to something better. ✨",
-      neutral: "I'm encountering some difficulties with this situation. Looking for ways to address these issues efficiently.",
-      professional: "We've identified several challenges in the current implementation. We're developing a structured approach to resolve these matters promptly.",
-      friendly: "Having a bit of a rough time with this! But hey, we'll figure it out together! How's everyone else handling similar situations? 💖",
-      bold: "Facing some MAJOR CHALLENGES right now but I'm DETERMINED to overcome them! Nothing will stand in the way of SUCCESS! 💪",
-      casual: "Tbh this isn't really working out great. Kind of a bummer, but whatever, we'll figure something out I guess.",
-      genz: "This is lowkey stressing me out fr fr. Not the vibe I was looking for. But we move! No cap! 😭✋",
-      inspirational: "Within every challenge lies the seed of opportunity. I'm embracing this moment of difficulty as the soil from which growth will bloom! 🌱"
-    };
-    
-    return negativeAlternatives[tone] || negativeAlternatives.neutral;
+  // If the tone doesn't exist in our transformations, use neutral
+  if (!toneTransformations[tone]) {
+    return toneTransformations.neutral(text);
   }
   
-  const toneOptions = toneOutputs[tone];
-  if (!toneOptions) {
-    return toneOutputs.neutral[Math.floor(Math.random() * toneOutputs.neutral.length)];
-  }
+  // Generate a transformed version of the input text based on the selected tone
+  const transformedText = toneTransformations[tone](text);
   
-  // Use the seed from text length but add randomness to ensure different outputs
-  // Convert to absolute value to avoid negative indices
-  const seed = Math.abs((text.length * Date.now()) % toneOptions.length);
-  return toneOptions[Math.floor(seed)];
+  // Add timestamp to seed to ensure different results on regenerate clicks
+  const seed = Date.now() % 10000;
+  
+  // Return the transformed text with slight randomization
+  return transformedText + (seed % 2 === 0 ? '' : ' ');
 };
 
 interface ToneInputProps {
@@ -259,6 +274,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   const [selectedAlternative, setSelectedAlternative] = useState(0);
   const [copied, setCopied] = useState(false);
   const [hasWarning, setHasWarning] = useState(false);
+  const [regenerateCounter, setRegenerateCounter] = useState(0);
   
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -313,12 +329,25 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
     }, 1200);
   };
   
-  // Important: Regenerate alternative text whenever the target tone changes
+  // Force regenerate when the user clicks the regenerate button
+  const forceRegenerate = () => {
+    setRegenerateCounter(prev => prev + 1);
+    generateAlternative();
+  };
+  
+  // Important: Regenerate alternative text whenever the target tone changes or input text changes
   useEffect(() => {
     if (inputText.trim() && analysis !== null) {
       generateAlternative();
     }
-  }, [targetTone]);
+  }, [targetTone, regenerateCounter]);
+  
+  // Generate when analysis is complete
+  useEffect(() => {
+    if (analysis !== null && inputText.trim()) {
+      generateAlternative();
+    }
+  }, [analysis]);
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(alternativeText);
@@ -551,7 +580,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                   variant="outline" 
                   size="sm"
                   className="mb-3 flex items-center"
-                  onClick={generateAlternative}
+                  onClick={forceRegenerate}
                   disabled={isGenerating || !inputText.trim()}
                 >
                   {isGenerating ? (
