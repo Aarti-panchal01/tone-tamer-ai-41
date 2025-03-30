@@ -3,64 +3,76 @@ import React from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { User, Bell, Settings } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 const Header: React.FC = () => {
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
   return (
-    <header className="border-b">
+    <header className="sticky top-0 z-10 backdrop-blur-md bg-background/80 border-b">
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-2">
-          <span role="img" aria-label="logo" className="text-2xl">
+          <span role="img" aria-label="logo" className="text-2xl animate-pulse-soft">
             🎭
           </span>
-          <h1 className="text-xl font-bold tracking-tight">
+          <Link to="/" className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity">
             <span className="text-primary">Tone</span>Tamer
-          </h1>
+            <span className="ml-1 text-xs font-normal bg-gradient-to-r from-pink-500 to-purple-500 text-transparent bg-clip-text">by Aarti</span>
+          </Link>
         </div>
         
         <nav className="hidden md:flex items-center gap-6">
-          <a 
-            href="#" 
+          <Link 
+            to="/" 
             className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              "text-primary"
+              "text-sm font-medium transition-colors hover:text-primary relative",
+              isActive("/") ? "text-primary after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary" : "text-muted-foreground"
             )}
           >
             Tone Checker
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            to="/my-history" 
             className={cn(
-              "text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              "text-sm font-medium transition-colors hover:text-primary relative",
+              isActive("/my-history") ? "text-primary after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary" : "text-muted-foreground"
             )}
           >
             My History
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            to="/style-guide" 
             className={cn(
-              "text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              "text-sm font-medium transition-colors hover:text-primary relative",
+              isActive("/style-guide") ? "text-primary after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary" : "text-muted-foreground"
             )}
           >
             Style Guide
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            to="/help" 
             className={cn(
-              "text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              "text-sm font-medium transition-colors hover:text-primary relative",
+              isActive("/help") ? "text-primary after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary" : "text-muted-foreground"
             )}
           >
             Help
-          </a>
+          </Link>
         </nav>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
+          <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground transition-colors group">
             <Bell className="h-5 w-5" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full group-hover:animate-pulse"></span>
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground transition-colors">
             <Settings className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
             <User className="h-5 w-5" />
           </Button>
         </div>

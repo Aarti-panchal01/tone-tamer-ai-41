@@ -13,7 +13,7 @@ const Index: React.FC = () => {
       <footer className="py-6 border-t">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; 2023 ToneTamer AI. All rights reserved.
+            &copy; 2023 ToneTamer AI by Aarti. Vibes only.
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
