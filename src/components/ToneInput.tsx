@@ -1,3 +1,4 @@
+
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -146,60 +147,79 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     return "I'm having a difficult time and would appreciate some support or someone to talk to.";
   }
   
-  const toneOutputs = {
+  // Define multiple different alternatives for each tone to ensure variety
+  const toneOutputs: Record<string, string[]> = {
     positive: [
       "I'm thrilled about this progress and see so much potential! Every step forward is a victory! 😊✨",
       "What a fantastic development! I'm genuinely excited about the amazing possibilities this creates! 🌟",
-      "I'm absolutely delighted with these results! This is such wonderful news and I'm feeling very optimistic! 💖"
+      "I'm absolutely delighted with these results! This is such wonderful news and I'm feeling very optimistic! 💖",
+      "So happy about how things are going! This is exactly the kind of positive outcome I was hoping for! 🎉",
+      "This is such great news! I'm feeling incredibly positive about the future and all the exciting possibilities! 💫"
     ],
     negative: [
       "This is extremely disappointing. I expected much better results than this.",
       "I'm completely unsatisfied with the outcome. The quality is far below acceptable standards.",
-      "This is not at all what I wanted. I'm very unhappy with how things turned out."
+      "This is not at all what I wanted. I'm very unhappy with how things turned out.",
+      "These results are terrible. I can't believe how poorly this has been executed.",
+      "I'm extremely frustrated with this situation. Nothing is working as it should."
     ],
     neutral: [
       "The process has been completed as requested. The results are now available for review.",
       "This update contains several modifications to the system. Documentation is available for reference.",
-      "The features have been implemented according to specifications. Testing can now begin."
+      "The features have been implemented according to specifications. Testing can now begin.",
+      "All requested changes have been applied. Please verify the outcomes at your convenience.",
+      "The project is proceeding as scheduled. No significant deviations have been observed."
     ],
     professional: [
       "We're pleased to inform you that the requested modifications have been successfully implemented per specifications.",
       "Upon thorough analysis of the requirements, we have developed a solution that effectively addresses the key objectives.",
-      "I would like to confirm that we have completed the integration as discussed, which should enhance overall functionality."
+      "I would like to confirm that we have completed the integration as discussed, which should enhance overall functionality.",
+      "After careful consideration of your feedback, we've implemented changes that align with industry best practices.",
+      "I'm writing to inform you that the project milestones have been achieved according to our established timeline."
     ],
     friendly: [
       "Hey there! Just wanted to let you know we've added that awesome feature you asked for! Can't wait to hear what you think! 💖",
       "Hi friend! Amazing news - we've made those changes you were hoping for! Hope you love them as much as we do! 🥰",
-      "Hello lovely! Just popping in to share that everything you requested is ready to go! So excited for you to see it! ✨"
+      "Hello lovely! Just popping in to share that everything you requested is ready to go! So excited for you to see it! ✨",
+      "Hey you! Guess what? Those super cool updates you wanted are all done! Let me know how you like them! 🤗",
+      "Hi there, sunshine! Just dropping a quick note to say your awesome request is all taken care of! Enjoy! 💝"
     ],
     bold: [
       "This GROUNDBREAKING update is going to REVOLUTIONIZE how you interact with our platform! Don't miss this INCREDIBLE opportunity!",
       "ATTENTION: We've just unleashed a GAME-CHANGING feature that will TRANSFORM your entire experience! Act NOW!",
-      "We've COMPLETELY REIMAGINED the interface and the results are SPECTACULAR! This will DRAMATICALLY improve your workflow!"
+      "We've COMPLETELY REIMAGINED the interface and the results are SPECTACULAR! This will DRAMATICALLY improve your workflow!",
+      "This is the BIGGEST and MOST IMPORTANT upgrade we've EVER released! You WON'T BELIEVE the AMAZING results!",
+      "PREPARE to be AMAZED by these REVOLUTIONARY changes that will INSTANTLY boost your productivity to NEW HEIGHTS!"
     ],
     casual: [
       "So yeah, we just rolled out that thing you wanted. Pretty cool if you ask me. Check it out whenever.",
       "Just FYI, that update is done. Turned out pretty decent. Let me know what you think when you get a chance.",
-      "Hey, so that stuff you asked for is ready now. No rush, but it's there when you need it."
+      "Hey, so that stuff you asked for is ready now. No rush, but it's there when you need it.",
+      "That update you mentioned? All done. Nothing too fancy, but it does the job. Let me know if it works for you.",
+      "Just wanted to give you a heads up that we finished that thing from before. It's ready whenever you wanna take a look."
     ],
     genz: [
       "FR FR this update is so bussin, no cap! It's giving main character energy and that's on periodt! 💅✨",
       "Bestie, this feature is LITERALLY eating and leaving no crumbs! It's so fire you'll be SHOOK! 😭🤌",
-      "The way this update ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥"
+      "The way this update ate and left zero crumbs?? You're about to be obsessed, I'm dead serious! It's giving everything it's supposed to give! 💯🔥",
+      "I can't even with how slay this new feature is! It's lowkey POPing off. Not me being obsessed with it! 💁‍♀️✌️",
+      "This update? IYKYK. Straight up vibing and it's honestly such a flex. Living for this energy rn! 🙌🤪"
     ],
     inspirational: [
       "Every step forward is a testament to your vision. This update represents not just code, but possibility—embrace it! 🚀",
       "Behind every feature lies a journey of growth. Let this improvement be the wings that elevate your project to new heights! ✨",
-      "The path to excellence is paved with continuous improvement. This update is not the destination, but another beautiful step in your journey! 🌟"
+      "The path to excellence is paved with continuous improvement. This update is not the destination, but another beautiful step in your journey! 🌟",
+      "Believe in the power of progress, for in these changes lies the seed of transformation. Your vision is becoming reality, one step at a time! 🌱",
+      "In the garden of innovation, each feature we plant today becomes tomorrow's opportunity. Watch as your dreams blossom into reality! 🌈"
     ]
   };
   
-  const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'].some(
+  const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous', 'poor'].some(
     word => lowerCaseText.includes(word)
   );
   
   if (hasNegativeKeywords || text === text.toUpperCase()) {
-    const negativeAlternatives = {
+    const negativeAlternatives: Record<string, string> = {
       positive: "I'm experiencing some challenges but remain optimistic about finding solutions! Every obstacle is just a stepping stone to something better. ✨",
       neutral: "I'm encountering some difficulties with this situation. Looking for ways to address these issues efficiently.",
       professional: "We've identified several challenges in the current implementation. We're developing a structured approach to resolve these matters promptly.",
@@ -210,15 +230,18 @@ const mockGenerateAlternative = (text: string, tone: string) => {
       inspirational: "Within every challenge lies the seed of opportunity. I'm embracing this moment of difficulty as the soil from which growth will bloom! 🌱"
     };
     
-    return negativeAlternatives[tone as keyof typeof negativeAlternatives] || negativeAlternatives.neutral;
+    return negativeAlternatives[tone] || negativeAlternatives.neutral;
   }
   
-  const toneOptions = toneOutputs[tone as keyof typeof toneOutputs];
+  const toneOptions = toneOutputs[tone];
   if (!toneOptions) {
-    return toneOutputs.neutral[Math.abs(text.length % toneOutputs.neutral.length)];
+    return toneOutputs.neutral[Math.floor(Math.random() * toneOutputs.neutral.length)];
   }
   
-  return toneOptions[Math.abs(text.length % toneOptions.length)];
+  // Use the seed from text length but add randomness to ensure different outputs
+  // Convert to absolute value to avoid negative indices
+  const seed = Math.abs((text.length * Date.now()) % toneOptions.length);
+  return toneOptions[Math.floor(seed)];
 };
 
 interface ToneInputProps {
@@ -280,6 +303,7 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
     setAlternatives([]);
     
     setTimeout(() => {
+      // Generate a unique alternative based on the target tone
       const alternative = mockGenerateAlternative(inputText, targetTone);
       
       setAlternatives([alternative]);
@@ -288,6 +312,13 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
       setIsGenerating(false);
     }, 1200);
   };
+  
+  // Important: Regenerate alternative text whenever the target tone changes
+  useEffect(() => {
+    if (inputText.trim() && analysis !== null) {
+      generateAlternative();
+    }
+  }, [targetTone]);
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(alternativeText);
@@ -344,12 +375,6 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
   };
   
   const currentPlatform = platformConfig[platform as keyof typeof platformConfig];
-  
-  useEffect(() => {
-    if (inputText.trim() && analysis !== null) {
-      generateAlternative();
-    }
-  }, [targetTone]);
   
   return (
     <div className="w-full">
