@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ToneInput from "./ToneInput";
 
 const PlatformTabs: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("twitter");
+  
   return (
-    <Tabs defaultValue="twitter" className="w-full">
+    <Tabs defaultValue="twitter" className="w-full" onValueChange={setActiveTab}>
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="twitter">
           <span className="mr-2">🐦</span>

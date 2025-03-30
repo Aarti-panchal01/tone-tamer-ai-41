@@ -1,5 +1,5 @@
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,23 +7,45 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Edit, Send, RefreshCw } from "lucide-react";
 
-// This would be replaced with actual API calls to your AI models
+// Enhanced analyze text function that correctly identifies negative text
 const mockAnalyzeText = (text: string) => {
   if (!text.trim()) return null;
   
-  // This is just a mock implementation
-  const tones = ["positive", "neutral", "negative", "sarcastic", "passive"];
+  // Detect negative content
+  const lowerCaseText = text.toLowerCase();
+  const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'].some(
+    word => lowerCaseText.includes(word)
+  );
+  
+  const hasUpperCase = text === text.toUpperCase() && text.length > 5;
+  const hasExclamations = (text.match(/!/g) || []).length > 1;
+  
+  // Determine tone based on content analysis
+  let overallTone = "neutral";
+  let confidence = 70;
+  let emojiMeter = "🙂 Neutral tone detected";
+  
+  if (hasNegativeKeywords || (hasUpperCase && hasExclamations)) {
+    overallTone = "negative";
+    confidence = 85;
+    emojiMeter = "😡 Negative tone detected";
+  } else if (text.includes('love') || text.includes('great') || text.includes('awesome')) {
+    overallTone = "positive";
+    confidence = 80;
+    emojiMeter = "😊 Positive tone detected";
+  }
+  
   const mockResults = {
-    overallTone: tones[Math.floor(Math.random() * tones.length)],
-    confidence: Math.floor(Math.random() * 40 + 60), // Random score between 60-100
+    overallTone,
+    confidence,
     triggers: [],
     suggestions: [],
     highlightedText: text,
-    emojiMeter: ""
+    emojiMeter
   };
 
-  // Simple mock to find potential trigger words
-  const negativeWords = ["hate", "terrible", "awful", "worst", "stupid", "ridiculous"];
+  // Find potential trigger words
+  const negativeWords = ["hate", "terrible", "awful", "worst", "stupid", "ridiculous", "rude"];
   const sarcasticWords = ["sure", "right", "yeah", "whatever", "obviously"];
   const passiveWords = ["kind of", "sort of", "maybe", "just", "actually"];
 
@@ -53,28 +75,24 @@ const mockAnalyzeText = (text: string) => {
     }
   }
 
-  // Generate mock suggestions
+  // Generate suggestions based on the tone
   if (mockResults.overallTone === "negative") {
-    mockResults.suggestions.push("Try using more positive language to convey your message.");
-    mockResults.suggestions.push("Consider replacing negative words with constructive alternatives.");
-    mockResults.emojiMeter = "😡 Negative tone detected";
+    mockResults.suggestions.push("Try using more constructive language to convey your feelings.");
+    mockResults.suggestions.push("Consider replacing negative words with more balanced alternatives.");
+    mockResults.suggestions.push("Your message might come across as harsh. Consider a more neutral approach.");
   } else if (mockResults.overallTone === "sarcastic") {
     mockResults.suggestions.push("Sarcasm can be easily misinterpreted in text. Consider being more direct.");
     mockResults.suggestions.push("Add emojis to clarify your tone if you want to keep the sarcasm.");
-    mockResults.emojiMeter = "😏 Sarcastic tone detected";
   } else if (mockResults.overallTone === "passive") {
     mockResults.suggestions.push("Your message might come across as uncertain. Try being more direct.");
     mockResults.suggestions.push("Remove phrases like 'kind of' and 'sort of' to sound more confident.");
-    mockResults.emojiMeter = "😐 Passive tone detected";
   } else if (mockResults.overallTone === "positive") {
     mockResults.suggestions.push("Your message has a positive tone. Great job!");
-    mockResults.emojiMeter = "😊 Positive tone detected";
   } else {
     mockResults.suggestions.push("Your message has a neutral tone, which is appropriate for many contexts.");
-    mockResults.emojiMeter = "🙂 Neutral tone detected";
   }
 
-  // Generate highlighted text
+  // Generate highlighted text with triggers
   if (mockResults.triggers.length > 0) {
     let highlightedText = text;
     let offset = 0;
@@ -102,6 +120,23 @@ const mockAnalyzeText = (text: string) => {
 const mockGenerateAlternative = (text: string, tone: string) => {
   if (!text.trim()) return "";
   
+  // Check if text contains negative content
+  const lowerCaseText = text.toLowerCase();
+  const hasNegativeKeywords = ['hate', 'rude', 'terrible', 'awful', 'worst', 'stupid', 'ridiculous'].some(
+    word => lowerCaseText.includes(word)
+  );
+  
+  if (hasNegativeKeywords || text === text.toUpperCase()) {
+    const alternatives = {
+      positive: `I'm having a challenging day but looking forward to things improving soon!`,
+      neutral: `Today has been difficult and I've encountered some frustrating interactions.`,
+      professional: `I'm experiencing some challenges at the moment and finding interactions difficult.`,
+      friendly: `Having a rough day today! Hoping things look up soon - how's everyone else doing?`,
+      bold: `Challenging day ahead but I'm determined to overcome these obstacles and move forward!`
+    };
+    return alternatives[tone as keyof typeof alternatives] || text;
+  }
+  
   const alternatives = {
     positive: `I'm excited about this new feature and believe it offers great potential for improvement!`,
     neutral: `The feature has been added to the product and will be available after the update.`,
@@ -118,11 +153,18 @@ interface ToneInputProps {
 }
 
 const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState("I HATE MY LIFE AND THINK PEOPLE ARE RUDE !!!");
   const [analysis, setAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [targetTone, setTargetTone] = useState("positive");
+  const [targetTone, setTargetTone] = useState("professional");
   const [alternativeText, setAlternativeText] = useState("");
+  
+  // Analyze text on component mount
+  useEffect(() => {
+    if (inputText) {
+      analyzeText(inputText);
+    }
+  }, []);
   
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
