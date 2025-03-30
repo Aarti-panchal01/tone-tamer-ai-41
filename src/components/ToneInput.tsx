@@ -1,3 +1,4 @@
+
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -158,10 +159,11 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     const alternatives = {
       positive: `I'm having a challenging day but looking forward to things improving soon! Every obstacle is a stepping stone to something better. ✨`,
       neutral: `Today has been difficult and I've encountered some frustrating interactions. Looking to reset and move forward.`,
-      professional: `We are pleased to announce the integration of this feature, which will enhance the user experience considerably.`,
+      professional: `I regret to inform that we have experienced some challenges. We are actively working on resolving these issues and appreciate your patience.`,
       friendly: `Having a rough day today! Hoping things look up soon - how's everyone else doing? We're all in this together! 💖`,
       bold: `Challenging day ahead but I'm DETERMINED to overcome these obstacles and move forward! Nothing will stop me! 💪`,
       casual: `Ugh, today's been a bit much tbh. But tomorrow's a new day, right? Just gotta vibe through it.`,
+      genz: `NGL, this day's lowkey been mid af. Straight up not vibing rn. But we move, no cap! 😭✋`,
       inspirational: `Even in difficult moments, I'm grateful for the lessons they bring. Growing through what I'm going through! 🌱`
     };
     return alternatives[lowerCaseTone as keyof typeof alternatives] || text;
@@ -174,6 +176,7 @@ const mockGenerateAlternative = (text: string, tone: string) => {
     friendly: `Hey everyone! We've added this awesome new feature that we think you'll love. Can't wait to hear what you think! Let us know your thoughts! 💖`,
     bold: `This GAME-CHANGING feature is going to revolutionize how you use our product. Don't miss out on the opportunity to transform your experience!`,
     casual: `So we just dropped this cool new thing and honestly? It's pretty fire. Check it out when you get a chance, no pressure.`,
+    genz: `FR FR just dropped this bussin feature and it's giving main character energy! No cap, it's a whole vibe. It's so fire you'll be SHOOK! 💅✨`,
     inspirational: `Innovation happens one feature at a time. We're proud to introduce this new capability that will empower you to achieve more! 🚀`
   };
   
@@ -464,6 +467,13 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                       onClick={() => setTargetTone("bold")}
                     >
                       <span className="mr-1">💪</span> Bold
+                    </Badge>
+                    <Badge 
+                      variant={targetTone === "genz" ? "default" : "outline"}
+                      className={`cursor-pointer ${targetTone === "genz" ? "bg-pink-500 hover:bg-pink-600" : ""}`}
+                      onClick={() => setTargetTone("genz")}
+                    >
+                      <span className="mr-1">💅</span> Gen Z
                     </Badge>
                   </div>
                 </div>
