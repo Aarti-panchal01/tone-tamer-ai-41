@@ -1,4 +1,3 @@
-
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -327,15 +326,8 @@ const ToneInput: React.FC<ToneInputProps> = ({ platform = "twitter" }) => {
                   Analyzing...
                 </>
               ) : (
-                <>
-                  Analyze Tone
-                </>
+                "Analyze Tone"
               )}
-            </Button>
-            
-            <Button variant="default" size="sm">
-              <Send className="mr-2 h-4 w-4" />
-              Post
             </Button>
           </div>
         </div>
