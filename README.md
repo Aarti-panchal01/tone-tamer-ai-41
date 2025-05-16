@@ -15,7 +15,7 @@ Tone Tamer AI helps users modify their text to match a desired tone, making comm
 - **Backend:** AI/ML Models (if applicable)  
 
 ## 🔗 Live Demo  
-👉 [Try it out here!](https://preview--tone-tamer-ai.lovable.app/)  
+👉 [Try it out here!](https://tone-tamer-ai.lovable.app/)  
 
 ## 🤝 Contributing  
 Contributions are welcome! Fork the repository, make improvements, and submit a pull request.  
